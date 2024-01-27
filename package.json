@@ -11,7 +11,8 @@
     "dependencies": {
         "blessed": "^0.1.81",
         "blessed-contrib": "^4.11.0",
-        "noble": "/Users/eberry/projects/noble-mac"
+        "noble": "/Users/eberry/projects/noble-mac",
+        "yaml": "^2.3.4"
     },
     "devDependencies": {
         "eslint": "^8.29.0",

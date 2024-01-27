@@ -1,70 +1,115 @@
-import noble from 'noble';
-import blessed from 'blessed';
-import { setInterval } from 'timers/promises';
-import fs from 'fs/promises';
-// Terminal UI setup
-const screen = blessed.screen({
-  smartCSR: true,
-  title: 'BLE Device Scanner',
-});
+import noble from 'noble'
+import blessed from 'blessed'
+import contrib from 'blessed-contrib'
+import { setInterval } from 'timers/promises'
+import fs from 'fs/promises'
+import formatDeviceInfo from './format-device-info.js'
 
-const list = blessed.list({
-  parent: screen,
-  width: '100%',
-  height: '100%',
-  keys: true,
-  vi: true,
-  mouse: true,
-  tags: true,
-  border: {
-    type: 'line',
-  },
-  style: {
-    selected: {
-      bg: 'green',
-    },
-  },
-});
+var screen
+var table
+var devices = {}
+const initBlessed = () => {
+    // Terminal UI setup
+    screen = blessed.screen({
+        smartCSR: true,
+        title: 'BLE Device Scanner',
+    })
+    screen.key(['escape', 'q', 'C-c'], () => process.exit(0))
+    table = contrib.table({
+        parent: screen,
+        keys: true,
+        interactive: true,
+        vi: true,
+        mouse: true,
+        tags: true,
+        border: {
+            type: 'line',
+        },
+        //  style: {
+        //      selected: {
+        //           bg: 'green',
+        //      },
+        //  },
+        select: function () {
+            //   fs.writeFile('test.txt', 'Hello World!', function (err) {
+            //       if (err) return console.log(err)
+            //       console.log('Hello World > test.txt')
+            //   })
+        },
+        columnSpacing: 2,
+        columnWidth: [45, 45, 25, 25],
+    })
+}
 
-// Start scanning when BLE adapter is powered on
-noble.on('stateChange', (state) => {
-  if (state === 'poweredOn') {
-    noble.startScanning([], true);
-  } else {
-    noble.stopScanning();
-  }
-});
+const initNoble = () => {
+    // Update the table with discovered devices
 
-// Update the list with discovered devices
-const devices = new Map();
 
-noble.on('discover', (peripheral) => {
-  const { id, advertisement, rssi } = peripheral;
-  fs.writeFile(`${id}.txt`, JSON.stringify(peripheral, null, 2));
-  const name = advertisement.localName || 'Unknown';
-  const manufacturerData = advertisement.manufacturerData?.toString('hex') || 'N/A';
-  devices.set(id, { name, manufacturerData, rssi });
-});
+    // Start scanning when BLE adapter is powered on
+    noble.on('stateChange', (state) => {
+        if (state === 'poweredOn') {
+            noble.startScanning([], true)
+        } else {
+            noble.stopScanning()
+        }
+    })
 
-// Function to update the UI list
+    noble.on('discover', (peripheral) => {
+        const id = peripheral.id
+        const obj = formatDeviceInfo(peripheral)
+
+        devices[id] = obj
+    })
+}
+
+// Function to update the UI table
 async function updateUI() {
-  list.clearItems();
-  devices.forEach((device, id) => {
-fs.writeFile(`${id}.txt`, JSON.stringify(device, null, 2));
-    list.addItem(`ID: ${id}, Name: ${device.name}, Manufacturer: ${device.manufacturerData}, RSSI: ${device.rssi}`);
-  });
-  screen.render();
+    let data = Object.values(devices).map((device) => {
+        const row = [device.name, device.rssi, device.connectable]
+        return row
+    })
+
+    table.setData({
+        headers: ['Name', 'RSSI', 'Connectable'],
+        data,
+    })
+    /*
+    var box = blessed.box({
+        top: 'center',
+        left: 'center',
+        width: '50%',
+        height: '50%',
+        content: 'Hello {bold}world{/bold}!',
+        tags: true,
+        border: {
+            type: 'line',
+        },
+        style: {
+            fg: 'white',
+            bg: 'magenta',
+            border: {
+                fg: '#f0f0f0',
+            },
+            hover: {
+                bg: 'green',
+            },
+        },
+    })
+
+    // Append our box to the screen.
+    screen.append(box) */
+    screen.render()
 }
 
 // Update UI every 100ms
 async function main() {
-  for await (const _ of setInterval(100)) {
-    updateUI();
-  }
+    initNoble()
+    initBlessed()
+    
+
+    for await (const _ of setInterval(100)) {
+        updateUI()
+    }
 }
 
-// Exit gracefully
-screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
-
-// Run the app
-main();
+main()
