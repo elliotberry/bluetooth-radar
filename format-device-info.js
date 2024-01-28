@@ -1,33 +1,46 @@
-const formatDeviceInfo = (peripheral) => {
-    const addToObjectIfDefined = (obj, key, value) => {
-        if (value !== undefined) {
-            obj[key] = value
+import fs from 'fs/promises'
+var loggedDevices = {}
+
+
+
+function filterOutFunctions(obj) {
+    const filteredObj = {};
+  
+    for (const key in obj) {
+      if (typeof obj[key] !== 'function') {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          filteredObj[key] = filterOutFunctions(obj[key]);
+        } else {
+          filteredObj[key] = obj[key];
         }
+      }
+    }
+  
+    return filteredObj;
+  }
+const formatDeviceInfo = (peripheral) => {
+   
+    let obj = {
+        id: peripheral.id,
+        address: peripheral.address,
+        addressType: peripheral.addressType,
+        connectable: peripheral.connectable,
+        advertisement: peripheral.advertisement || {},
+        rssi: peripheral.rssi,
+        services: peripheral.services,
+        state: peripheral.state,
+        type: peripheral.type,
+        uuid: peripheral.uuid,
+        name: peripheral.advertisement.localName || 'Unknown',
+        manufacturerData: peripheral.advertisement.manufacturerData?.toString('hex') || 'N/A'
     }
 
-    let obj = {}
-    addToObjectIfDefined(obj, 'id', peripheral.id)
-    addToObjectIfDefined(obj, 'address', peripheral.address)
-    addToObjectIfDefined(obj, 'addressType', peripheral.addressType)
-    addToObjectIfDefined(obj, 'connectable', peripheral.connectable)
-    addToObjectIfDefined(obj, 'advertisement', peripheral.advertisement)
-    addToObjectIfDefined(obj, 'rssi', peripheral.rssi)
-    addToObjectIfDefined(obj, 'services', peripheral.services)
-    addToObjectIfDefined(obj, 'state', peripheral.state)
-    addToObjectIfDefined(obj, 'type', peripheral.type)
-    addToObjectIfDefined(obj, 'uuid', peripheral.uuid)
-    addToObjectIfDefined(obj, 'lastSeen', peripheral.lastSeen)
-
-   
-    addToObjectIfDefined(obj, 'rssi', peripheral.connectable)
     let connectableStr = 'n'
     if (peripheral.connectable && peripheral.connectable === true) {
         connectableStr = 'y'
     }
-    obj.connectable = connectableStr
-    obj.advertisement = peripheral.advertisement || {}
-    obj.name = obj.advertisement.localName || 'Unknown'
-    obj.manufacturerData = obj.advertisement.manufacturerData?.toString('hex') || 'N/A'
+    obj.connectableSymbol = connectableStr
+  
     return obj
 }
 

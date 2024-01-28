@@ -12,6 +12,7 @@
         "blessed": "^0.1.81",
         "blessed-contrib": "^4.11.0",
         "noble": "/Users/eberry/projects/noble-mac",
+        "random-words": "^2.0.1",
         "yaml": "^2.3.4"
     },
     "devDependencies": {

@@ -2,17 +2,24 @@ import noble from 'noble'
 import blessed from 'blessed'
 import contrib from 'blessed-contrib'
 import { setInterval } from 'timers/promises'
-import fs from 'fs/promises'
+
 import formatDeviceInfo from './format-device-info.js'
+import { logDevice, getLoggedDevices } from './state.js'
 
 var screen
 var table
 var devices = {}
+
+let propertiesToShow = ['word', 'id', 'name', 'rssi', 'connectable']
+let columnWidths = propertiesToShow.map(
+    (property) => 100 / propertiesToShow.length
+)
+
 const initBlessed = () => {
     // Terminal UI setup
     screen = blessed.screen({
         smartCSR: true,
-        title: 'BLE Device Scanner',
+        title: 'BLE Radar',
     })
     screen.key(['escape', 'q', 'C-c'], () => process.exit(0))
     table = contrib.table({
@@ -25,26 +32,14 @@ const initBlessed = () => {
         border: {
             type: 'line',
         },
-        //  style: {
-        //      selected: {
-        //           bg: 'green',
-        //      },
-        //  },
-        select: function () {
-            //   fs.writeFile('test.txt', 'Hello World!', function (err) {
-            //       if (err) return console.log(err)
-            //       console.log('Hello World > test.txt')
-            //   })
-        },
+
         columnSpacing: 2,
-        columnWidth: [45, 45, 25, 25],
+        columnWidth: columnWidths,
     })
 }
 
 const initNoble = () => {
     // Update the table with discovered devices
-
-
     // Start scanning when BLE adapter is powered on
     noble.on('stateChange', (state) => {
         if (state === 'poweredOn') {
@@ -54,60 +49,51 @@ const initNoble = () => {
         }
     })
 
-    noble.on('discover', (peripheral) => {
-        const id = peripheral.id
-        const obj = formatDeviceInfo(peripheral)
+    noble.on('discover', async (peripheral) => {
+        let id = peripheral.id
 
-        devices[id] = obj
+        let finalOut = await logDevice(peripheral)
+
+        devices[id] = finalOut
     })
 }
 
 // Function to update the UI table
 async function updateUI() {
-    let data = Object.values(devices).map((device) => {
-        const row = [device.name, device.rssi, device.connectable]
-        return row
-    })
+    let out = []
+
+    for (let key in devices) {
+        let device = devices[key]
+
+        if (device.active === true) {
+            let thisArray = []
+            for (let property of propertiesToShow) {
+                let val = device[property]
+                if (val === undefined) {
+                    val = 'N/A'
+                }
+                thisArray.push(val)
+            }
+            out.push(thisArray)
+        }
+    }
 
     table.setData({
-        headers: ['Name', 'RSSI', 'Connectable'],
-        data,
-    })
-    /*
-    var box = blessed.box({
-        top: 'center',
-        left: 'center',
-        width: '50%',
-        height: '50%',
-        content: 'Hello {bold}world{/bold}!',
-        tags: true,
-        border: {
-            type: 'line',
-        },
-        style: {
-            fg: 'white',
-            bg: 'magenta',
-            border: {
-                fg: '#f0f0f0',
-            },
-            hover: {
-                bg: 'green',
-            },
-        },
+        headers: propertiesToShow,
+        data: out,
     })
 
-    // Append our box to the screen.
-    screen.append(box) */
     screen.render()
 }
 
 // Update UI every 100ms
 async function main() {
+    let olddevices = await getLoggedDevices()
+    devices = olddevices
     initNoble()
     initBlessed()
-    
 
-    for await (const _ of setInterval(100)) {
+    for await (const _ of setInterval(600)) {
         updateUI()
     }
 }
