@@ -2,9 +2,9 @@ import noble from 'noble'
 import blessed from 'blessed'
 import contrib from 'blessed-contrib'
 import { setInterval } from 'timers/promises'
+var state;
 
-import formatDeviceInfo from './format-device-info.js'
-import { logDevice, getLoggedDevices } from './state.js'
+import State from './state-copy.js'
 
 var screen
 var table
@@ -51,10 +51,7 @@ const initNoble = () => {
 
     noble.on('discover', async (peripheral) => {
         let id = peripheral.id
-
-        let finalOut = await logDevice(peripheral)
-
-        devices[id] = finalOut
+      await state.logDevice(peripheral)   
     })
 }
 
@@ -88,14 +85,19 @@ async function updateUI() {
 
 // Update UI every 100ms
 async function main() {
-    let olddevices = await getLoggedDevices()
-    devices = olddevices
-    initNoble()
-    initBlessed()
+  state = new State()
+    await state.init()
 
-    for await (const _ of setInterval(600)) {
-        updateUI()
-    }
+
+
+    initNoble()
+   // initBlessed()
+
+   for await (const _ of setInterval(600)) {
+      // updateUI()
+      let deviceArray = Object.values(state.activeDevices())
+      console.log('devices:', state.activeDevices())
+  }
 }
 
 main()
