@@ -2,7 +2,7 @@ import noble from 'noble'
 import blessed from 'blessed'
 import contrib from 'blessed-contrib'
 import { setInterval } from 'timers/promises'
-var state;
+var state
 
 import State from './state-copy.js'
 
@@ -51,7 +51,7 @@ const initNoble = () => {
 
     noble.on('discover', async (peripheral) => {
         let id = peripheral.id
-      await state.logDevice(peripheral)   
+        await state.logDevice(peripheral)
     })
 }
 
@@ -85,19 +85,17 @@ async function updateUI() {
 
 // Update UI every 100ms
 async function main() {
-  state = new State()
+    state = new State()
     await state.init()
 
-
-
     initNoble()
-   // initBlessed()
+    // initBlessed()
 
-   for await (const _ of setInterval(600)) {
-      // updateUI()
-      let deviceArray = Object.values(state.activeDevices())
-      console.log('devices:', state.activeDevices())
-  }
+    for await (const _ of setInterval(600)) {
+       
+        console.clear()
+        console.log('devices:', state.activeDevices().map(e => `${e.id}, ${e.name}`).join('\n'))
+    }
 }
 
 main()

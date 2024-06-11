@@ -11,11 +11,9 @@ class State {
     activeDevices() {
         //filter out of object
 
-
-
-
-        
-        return Object.keys(this.devices).filter((key) => this.devices[key].active)
+        return Object.keys(this.devices).filter(
+            (key) => this.devices[key].active
+        ).map((key) => this.devices[key])
     }
     async persistState() {
         const currentTime = Date.now()
@@ -50,7 +48,43 @@ class State {
             }
         }
     }
-
+    readCharacteristic(characteristic) {
+        return new Promise((resolve, reject) => {
+          characteristic.read((error, data) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(data.toString('utf8'));
+            }
+          });
+        });
+      }
+    async connectDevice(deviceId) {
+        peripheral.connect((error) => {
+            if (error) {
+              reject(error);
+            } else {
+              this.connected = true;
+              console.log(`Connected to ${this.name} (${this.address})`);
+              peripheral.discoverAllServicesAndCharacteristics((error, services) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  services.forEach((service) => {
+                    service.discoverAllCharacteristics((error, characteristics) => {
+                      if (error) {
+                        reject(error);
+                      } else {
+                        this.characteristics.push(...characteristics);
+                      }
+                    });
+                  });
+                  resolve();
+                }
+              });
+            }
+          });
+    }
     async logDevice(device) {
         this.fileSync = false
         let obj = formatDeviceInfo(device)
@@ -64,14 +98,15 @@ class State {
         obj.active = true
         obj.lastSeen = Date.now()
         this.devices[obj.id] = obj
-        await this.persistState()
+       // await this.persistState()
+
         return obj
     }
 
     async getLoggedDevices() {
-        await this.initPersistedState()
+       // await this.initPersistedState()
         return this.devices
     }
 }
 
-export default State;
+export default State

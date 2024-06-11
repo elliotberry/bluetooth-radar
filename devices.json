@@ -1,0 +1,191 @@
+[
+  {
+    "uuid": "f8916999ed83eaf6e2d6b0326ae6710d",
+    "name": "S38 DC9A LE",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "67bf68960e2e4c6321762b26d57c9ae1",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "ddff0fe8727d6205b6d6ce0523b4c456",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "abe80e1589929fe3322420be8244036f",
+    "name": "S39 3FC8 LE",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "e14aa7d62d73920e306380305b58ac6b",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "c999ae274e53055b43e7cb75052c98f2",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "c58776bf5f1c168f96df806f33c8331a",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "a018c3464cc59ab6764c14eadbd6f5d8",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "3a75fdf8f92eb66b5711b9f30ffae4d0",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "9617e7bb4aaaa2902984063f3d7c8e26",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "47833dc7a062ae48d3f3adc814d7c9ef",
+    "name": "N0FD5",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "d5da1eb4f3e755b7ea79628ab07d776f",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "9f243cabd60473b78b584e5fbd685284",
+    "name": "[TV] Samsung 7 Series (43)",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "b231ebb60948a5e512ccd40f4e9518e6",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "da0f5c2ffd6a1429a608d8000e3b06ed",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "c054400bf11b156c17396a844d68e45a",
+    "name": "S8282dc5153189666C",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "33bf17a37a4d7c7b03d094c799cc7525",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "c54980071aeed3b9349b1e3d65a64edc",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "44c0887a3372ea5daa6febb58e95df40",
+    "name": "NRUKM",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "02e633f7cc1c90ea518c74a93bdee3aa",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "8ec56d41f60813e1c6edcc2ba4508019",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "8754d0a4c47820333747fad1697a2643",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "b9bc6a6696e1cad018eac991f4b3a7af",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "064f4b4c3ee8ef6db163021997bf041e",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "11dfb2223b223565b0af313f4a0c6817",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "0b5f61e9fa1b2bbe9d537ca58d8805dc",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  },
+  {
+    "uuid": "04dbbe5b854d99a2d5498c889f63cf47",
+    "name": "Unknown",
+    "address": "",
+    "connected": false,
+    "characteristics": []
+  }
+]

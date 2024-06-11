@@ -4,9 +4,7 @@
     "main": "index.js",
     "author": "dad",
     "license": "The Unlicense",
-    "bin": {
-        "ble-radar": "./index.js"
-    },
+    "bin": "./index.js",
     "type": "module",
     "dependencies": {
         "blessed": "^0.1.81",
