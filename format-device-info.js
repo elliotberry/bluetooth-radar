@@ -19,9 +19,9 @@ function filterOutFunctions(obj) {
     return filteredObj;
   }
 const formatDeviceInfo = (peripheral) => {
-   
+   let id = peripheral.id || peripheral.uuid
     let obj = {
-        id: peripheral.id,
+        id: id,
         address: peripheral.address,
         addressType: peripheral.addressType,
         connectable: peripheral.connectable,
