@@ -1,9 +1,9 @@
 //import display from './terminal-log.js'
 import chalk from 'chalk'
-import setup from './blessed.js'
-import terminalLog from './terminal-log.js'
+import setup from './lib/blessed.js'
+import terminalLog from './lib/terminal-log.js'
 var state
-import State from './state.js'
+import State from './lib/state.js'
 const truncateId = (str) => {
     if (str) {
         if (str.length > 12) {
