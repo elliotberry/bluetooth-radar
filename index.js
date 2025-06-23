@@ -17,9 +17,10 @@ const formatStateOutput = () => {
     let active = []
     let inactive = []
     state.getDevices().forEach((e) => {
+  
         if (e.active) {
             active.push(
-                `${e.word} ${truncateId(e.id)}, ${e.name}, ${
+                `${e.word} ${truncateId(e.id)}, ${e.name}, ${e.companyName}, ${
                     e.rssi
                 }`
             )

@@ -21,7 +21,7 @@ class State {
         noble.on('stateChange', (state) => {
             if (state === 'poweredOn') {
                 noble.startScanning([], true)
-              //.log('Scanning for BLE devices...')
+                //.log('Scanning for BLE devices...')
             } else {
                 noble.stopScanning()
             }
@@ -80,20 +80,20 @@ class State {
         this.initNoble()
         await this.loadState()
     }
- 
-    
+
     async deviceSeen(theDevice) {
         let newInfo = {
             rssi: theDevice.rssi,
-           // advertisement: theDevice.advertisement,
-           // services: theDevice.services,
+            // advertisement: theDevice.advertisement,
+            // services: theDevice.services,
             state: theDevice.state,
         }
         await this.updateDevice(theDevice.uuid, newInfo)
     }
+
     async updateDevice(id, object) {
         let device = this.devices[id]
-        
+
         let newDevice = Object.assign(device, object)
         this.devices[id] = newDevice
         await this.persistState()
@@ -104,7 +104,7 @@ class State {
         if (peripheral.connectable) {
             try {
                 let vals = await this.connectAndRead(peripheral)
-               // console.log(vals)
+                // console.log(vals)
             } catch (error) {
                 console.error(`Failed to connect and read: ${error}`)
             }
@@ -166,7 +166,7 @@ class State {
                                     `Error disconnecting from peripheral: ${error}`
                                 )
                             }
-                           // console.log('Disconnected from peripheral')
+                            // console.log('Disconnected from peripheral')
                             resolve(
                                 Object.keys(characteristicData).length > 0
                                     ? characteristicData
@@ -179,7 +179,7 @@ class State {
         })
     }
     async logDevice(peripheral) {
-      //  console.log('Discovered device:', peripheral.id)
+        //  console.log('Discovered device:', peripheral.id)
         if (this.devices[peripheral.uuid]) {
             this.deviceSeen(peripheral)
         } else {
@@ -189,10 +189,9 @@ class State {
             obj.word = deterministicID(obj.uuid)
 
             obj.active = true
-            obj.lastSeen = Date.now();
-          //  await this.connectAndRead(peripheral);
+            obj.lastSeen = Date.now()
+            //  await this.connectAndRead(peripheral);
             this.updateDevice(obj.id, obj)
-          
         }
         return this.devices[peripheral.id]
     }
