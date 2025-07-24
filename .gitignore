@@ -1,5 +1,7 @@
+.coderobot
 #wrangler (cf workers)
 .wrangler
+data.json
 # Compiled source
 *.com
 *.class
@@ -7,7 +9,7 @@
 *.exe
 *.o
 *.so
-
+*.env
 # Logs and databases
 *.log
 
