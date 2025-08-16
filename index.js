@@ -1,17 +1,9 @@
-//import display from './terminal-log.js'
-import chalk from 'chalk'
-import setup from './lib/blessed.js'
+#!/usr/bin/env node
 import terminalLog from './lib/terminal-log.js'
-var state
 import State from './lib/state.js'
-const truncateId = (str) => {
-    if (str) {
-        if (str.length > 12) {
-            return `${str.slice(0, 4)}...${str.slice(-4)}`
-        }
-        return str
-    }
-}
+import truncateId from './lib/truncate-id.js'
+var state
+
 
 const formatStateOutput = () => {
     let active = []
