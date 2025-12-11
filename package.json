@@ -10,7 +10,7 @@
         "@farjs/blessed": "^0.4.0",
         "blessed": "^0.1.81",
         "blessed-contrib": "^4.11.0",
-        "noble": "/Users/eberry/projects/noble-mac",
+        "noble": "elliotberry/noble-mac",
         "yaml": "^2.8.1"
     },
     "devDependencies": {
