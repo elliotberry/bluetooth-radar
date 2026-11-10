@@ -12,7 +12,7 @@
     "app": {
         "windows": [
             {
-                "title": "BLE Radar",
+                "title": "Bluetooth Radar",
                 "width": 1100,
                 "height": 720,
                 "minWidth": 720,
