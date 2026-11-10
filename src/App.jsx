@@ -33,13 +33,28 @@ export default function App() {
     const [selectedId, setSelectedId] = useState(null)
     const [query, setQuery] = useState('')
     const [platform, setPlatform] = useState(null)
-    const [detailOpen, setDetailOpen] = useState(
-        () => localStorage.getItem('detailOpen') !== 'false'
-    )
+    // Settings live in config.json next to the database. null until loaded.
+    const [config, setConfig] = useState(null)
 
     useEffect(() => {
-        localStorage.setItem('detailOpen', String(detailOpen))
-    }, [detailOpen])
+        invoke('get_config')
+            .then(setConfig)
+            .catch(() => setConfig({}))
+    }, [])
+
+    const updateConfig = (key, value) => {
+        setConfig((c) => ({ ...c, [key]: value }))
+        invoke('set_config', { key, value }).catch(() => {})
+    }
+
+    const detailOpen = config?.detailOpen !== false
+    const setDetailOpen = (open) => updateConfig('detailOpen', open)
+
+    // Clicking a row selects it and opens the details panel if it was hidden.
+    const selectDevice = (id) => {
+        setSelectedId(id)
+        setDetailOpen(true)
+    }
 
     useEffect(() => {
         let cancelled = false
@@ -84,6 +99,8 @@ export default function App() {
     const inactive = filtered.filter((d) => !d.active)
     const selected = devices.find((d) => d.id === selectedId) ?? null
 
+    if (!config) return null
+
     return (
         <div className="app">
             <header className="toolbar">
@@ -102,7 +119,7 @@ export default function App() {
                 <button onClick={() => invoke('clear_devices')}>Clear</button>
                 <button
                     className={`icon-button ${detailOpen ? 'active' : ''}`}
-                    onClick={() => setDetailOpen((open) => !open)}
+                    onClick={() => setDetailOpen(!detailOpen)}
                     aria-label={detailOpen ? 'Hide details panel' : 'Show details panel'}
                     aria-pressed={detailOpen}
                     title={detailOpen ? 'Hide details panel' : 'Show details panel'}
@@ -121,20 +138,24 @@ export default function App() {
                         title="Active"
                         devices={active}
                         selectedId={selectedId}
-                        onSelect={setSelectedId}
+                        onSelect={selectDevice}
                         emptyText="No active devices"
+                        columnOrder={config.columnOrder}
+                        onColumnOrderChange={(order) => updateConfig('columnOrder', order)}
                     />
                     <DeviceTable
                         title="Inactive"
                         devices={inactive}
                         selectedId={selectedId}
-                        onSelect={setSelectedId}
+                        onSelect={selectDevice}
                         collapsible
                         compact
                         emptyText="No inactive devices"
+                        columnOrder={config.columnOrder}
+                        onColumnOrderChange={(order) => updateConfig('columnOrder', order)}
                     />
                 </div>
-                <DetailPane device={selected} platform={platform} />
+                {detailOpen && <DetailPane device={selected} platform={platform} />}
             </main>
         </div>
     )

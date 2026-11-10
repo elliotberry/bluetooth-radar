@@ -72,6 +72,19 @@ button:hover {
     border-color: var(--accent);
 }
 
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+    color: var(--muted);
+}
+
+.icon-button.active,
+.icon-button:hover {
+    color: var(--accent);
+}
+
 .status {
     display: flex;
     align-items: center;
@@ -157,6 +170,11 @@ th {
 
 th:hover {
     color: var(--text);
+}
+
+th.drag-over {
+    color: var(--accent);
+    box-shadow: inset 2px 0 0 var(--accent);
 }
 
 td {

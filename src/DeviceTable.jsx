@@ -72,6 +72,26 @@ const COLUMNS = [
     },
 ]
 
+export const DEFAULT_COLUMN_ORDER = COLUMNS.map((c) => c.key)
+
+// Saved order first (ignoring keys that no longer exist), then any columns
+// the saved order does not mention, so newly added columns still appear.
+function resolveOrder(saved) {
+    const known = new Set(DEFAULT_COLUMN_ORDER)
+    const order = (Array.isArray(saved) ? saved : []).filter(
+        (k, i, all) => known.has(k) && all.indexOf(k) === i
+    )
+    return [...order, ...DEFAULT_COLUMN_ORDER.filter((k) => !order.includes(k))]
+}
+
+function moveColumn(order, from, to) {
+    const next = order.filter((k) => k !== from)
+    next.splice(order.indexOf(to), 0, from)
+    return next
+}
+
+const DRAG_TYPE = 'text/x-ble-column'
+
 const DESC_FIRST = ['rssi', 'seenCount', 'lastSeen', 'connectable']
 
 function compare(a, b) {
@@ -89,12 +109,27 @@ export default function DeviceTable({
     emptyText,
     collapsible = false,
     compact = false,
+    columnOrder,
+    onColumnOrderChange,
 }) {
     const [sort, setSort] = useState({ key: 'rssi', dir: 'desc' })
     const [collapsed, setCollapsed] = useState(collapsible)
+    const [dragOverKey, setDragOverKey] = useState(null)
 
     // The inactive section drops the live-only columns, like the CLI does.
-    const columns = COLUMNS.filter((c) => !(compact && c.active))
+    const order = resolveOrder(columnOrder)
+    const columns = order
+        .map((key) => COLUMNS.find((c) => c.key === key))
+        .filter((c) => !(compact && c.active))
+
+    const handleDrop = (e, targetKey) => {
+        e.preventDefault()
+        setDragOverKey(null)
+        const from = e.dataTransfer.getData(DRAG_TYPE)
+        if (from && from !== targetKey) {
+            onColumnOrderChange(moveColumn(order, from, targetKey))
+        }
+    }
 
     const sorted = useMemo(() => {
         const column = COLUMNS.find((c) => c.key === sort.key) ?? COLUMNS[0]
@@ -130,7 +165,26 @@ export default function DeviceTable({
                         <thead>
                             <tr>
                                 {columns.map((c) => (
-                                    <th key={c.key} onClick={() => toggleSort(c.key)}>
+                                    <th
+                                        key={c.key}
+                                        className={dragOverKey === c.key ? 'drag-over' : ''}
+                                        draggable
+                                        title="Click to sort, drag to reorder"
+                                        onClick={() => toggleSort(c.key)}
+                                        onDragStart={(e) => {
+                                            e.dataTransfer.setData(DRAG_TYPE, c.key)
+                                            e.dataTransfer.effectAllowed = 'move'
+                                        }}
+                                        onDragOver={(e) => {
+                                            if (e.dataTransfer.types.includes(DRAG_TYPE)) {
+                                                e.preventDefault()
+                                                setDragOverKey(c.key)
+                                            }
+                                        }}
+                                        onDragLeave={() => setDragOverKey(null)}
+                                        onDragEnd={() => setDragOverKey(null)}
+                                        onDrop={(e) => handleDrop(e, c.key)}
+                                    >
                                         {c.label}
                                         {sort.key === c.key && (
                                             <span className="sort">

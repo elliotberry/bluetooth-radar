@@ -1,3 +1,4 @@
+mod config;
 mod decode;
 mod device;
 mod ids;
@@ -14,6 +15,7 @@ use std::sync::{Arc, Mutex};
 use serde::Serialize;
 use tauri::{Emitter, Manager, State};
 
+use config::Config;
 use device::GattInfo;
 use scanner::{ScanStatus, SharedStatus, SharedStore};
 use store::Store;
@@ -37,6 +39,22 @@ fn clear_devices(app: tauri::AppHandle, store: State<'_, SharedStore>) {
         store.snapshot()
     };
     let _ = app.emit(scanner::EVENT_DEVICES, snapshot);
+}
+
+type SharedConfig = Mutex<Config>;
+
+#[tauri::command]
+fn get_config(config: State<'_, SharedConfig>) -> serde_json::Value {
+    config.lock().unwrap().all()
+}
+
+#[tauri::command]
+fn set_config(
+    config: State<'_, SharedConfig>,
+    key: String,
+    value: serde_json::Value,
+) -> Result<(), String> {
+    config.lock().unwrap().set(&key, value)
 }
 
 #[derive(Serialize)]
@@ -89,6 +107,7 @@ pub fn run() {
             )));
             let status: SharedStatus = Arc::new(Mutex::new(scanner::initial_status()));
 
+            app.manage(Mutex::new(Config::open(&db_dir.join("config.json"))));
             app.manage(store.clone());
             app.manage(status.clone());
 
@@ -99,6 +118,8 @@ pub fn run() {
             get_devices,
             get_scan_status,
             get_app_info,
+            get_config,
+            set_config,
             clear_devices,
             query_device
         ])
