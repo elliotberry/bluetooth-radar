@@ -1,0 +1,14 @@
+Radar Mono is a subset of Cilantro Code Mono (Regular and Bold), reduced to
+Latin, punctuation, arrows and box/geometric symbols. Because it is a modified
+version, it is renamed and does not use the Reserved Font Names
+"Cilantro Code" or "香菜碼".
+
+Original font: https://github.com/DraftingDreamer/FontCilantroCode
+
+Copyright 2026 The CilantroCode Project Authors (https://github.com/DraftingDreamer/FontCilantroCode), with Reserved Font Names "Cilantro Code" and "香菜碼". Portions Copyright 2025 The Iansui Project Authors (https://github.com/ButTaiwan/iansui). Portions Copyright 2024 The Red Hat Project Authors (https://github.com/RedHatOfficial/RedHatFont).
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+
+https://openfontlicense.org
+
+Full license text: https://openfontlicense.org
