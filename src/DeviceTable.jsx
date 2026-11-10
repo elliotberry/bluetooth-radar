@@ -1,29 +1,78 @@
 import { useMemo, useState } from 'react'
 import { deviceColor, truncateId } from './color.js'
+import {
+    TREND_SYMBOL,
+    companyLabel,
+    formatAgo,
+    formatDistance,
+    infoLabel,
+    signalPercent,
+} from './format.js'
 
 const COLUMNS = [
-    { key: 'word', label: 'Word', value: (d) => d.word },
+    {
+        key: 'word',
+        label: 'Word',
+        value: (d) => d.word,
+        render: (d) => (
+            <>
+                {d.word}
+                {d.likelyRandom && (
+                    <span className="flag" title={`Rotating address: ${d.randomReason}`}>
+                        {' '}
+                        ↻
+                    </span>
+                )}
+            </>
+        ),
+    },
     { key: 'id', label: 'ID', value: (d) => d.id, render: (d) => truncateId(d.id) },
     { key: 'name', label: 'Name', value: (d) => d.name },
-    { key: 'company', label: 'Company', value: (d) => d.companyName ?? '', active: true },
-    { key: 'rssi', label: 'RSSI', value: (d) => d.rssi ?? -999, active: true },
+    { key: 'company', label: 'Company', value: companyLabel, active: true },
+    { key: 'info', label: 'Info', value: infoLabel, active: true },
+    {
+        key: 'rssi',
+        label: 'RSSI',
+        value: (d) => d.rssi ?? -999,
+        active: true,
+        render: (d) => (
+            <span className="rssi">
+                <span className="bar">
+                    <span style={{ width: `${signalPercent(d.rssi)}%` }} />
+                </span>
+                {d.rssi ?? 'n/a'}
+                {d.rssiTrend && (
+                    <span className="trend" title={`Getting ${d.rssiTrend}`}>
+                        {TREND_SYMBOL[d.rssiTrend]}
+                    </span>
+                )}
+            </span>
+        ),
+    },
+    {
+        key: 'distance',
+        label: 'Distance',
+        value: (d) => d.distanceM ?? Infinity,
+        active: true,
+        render: (d) => formatDistance(d.distanceM),
+    },
+    {
+        key: 'connectable',
+        label: 'Conn',
+        value: (d) => (d.connectable == null ? -1 : d.connectable ? 1 : 0),
+        active: true,
+        render: (d) => (d.connectable == null ? '' : d.connectable ? 'y' : 'n'),
+    },
     { key: 'seenCount', label: 'Seen', value: (d) => d.seenCount ?? 0 },
-    { key: 'lastSeen', label: 'Last seen', value: (d) => d.lastSeen },
+    {
+        key: 'lastSeen',
+        label: 'Last seen',
+        value: (d) => d.lastSeen,
+        render: (d) => formatAgo(d.lastSeen),
+    },
 ]
 
-function signalPercent(rssi) {
-    if (rssi == null) return 0
-    // Map roughly -100 dBm (nothing) .. -30 dBm (right next to us) to 0..100.
-    return Math.max(0, Math.min(100, ((rssi + 100) / 70) * 100))
-}
-
-function formatAgo(ms) {
-    const seconds = Math.max(0, Math.round((Date.now() - ms) / 1000))
-    if (seconds < 60) return `${seconds}s ago`
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-    return `${Math.floor(seconds / 86400)}d ago`
-}
+const DESC_FIRST = ['rssi', 'seenCount', 'lastSeen', 'connectable']
 
 function compare(a, b) {
     if (typeof a === 'string' || typeof b === 'string') {
@@ -61,7 +110,7 @@ export default function DeviceTable({
         setSort((s) =>
             s.key === key
                 ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' }
-                : { key, dir: ['rssi', 'seenCount', 'lastSeen'].includes(key) ? 'desc' : 'asc' }
+                : { key, dir: DESC_FIRST.includes(key) ? 'desc' : 'asc' }
         )
 
     return (
@@ -102,24 +151,7 @@ export default function DeviceTable({
                                 >
                                     {columns.map((c) => (
                                         <td key={c.key}>
-                                            {c.key === 'rssi' ? (
-                                                <span className="rssi">
-                                                    <span className="bar">
-                                                        <span
-                                                            style={{
-                                                                width: `${signalPercent(d.rssi)}%`,
-                                                            }}
-                                                        />
-                                                    </span>
-                                                    {d.rssi ?? 'n/a'}
-                                                </span>
-                                            ) : c.key === 'lastSeen' ? (
-                                                formatAgo(d.lastSeen)
-                                            ) : c.render ? (
-                                                c.render(d)
-                                            ) : (
-                                                c.value(d)
-                                            )}
+                                            {c.render ? c.render(d) : c.value(d)}
                                         </td>
                                     ))}
                                 </tr>

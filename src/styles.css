@@ -250,3 +250,76 @@ code {
     padding: 0;
     list-style: none;
 }
+
+.muted {
+    color: var(--muted);
+}
+
+.error {
+    color: #ff8a80;
+}
+
+.flag {
+    opacity: 0.8;
+    cursor: help;
+}
+
+.trend {
+    margin-left: 4px;
+    opacity: 0.9;
+}
+
+.spark {
+    margin: 10px 0 4px;
+}
+
+.detail-section {
+    margin-top: 16px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+}
+
+.detail-section h3 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+
+.detail-section p {
+    margin: 0 0 8px;
+}
+
+.entry {
+    margin-bottom: 10px;
+}
+
+.decoded {
+    margin: 4px 0;
+    padding-left: 14px;
+}
+
+.hex {
+    display: block;
+    color: var(--muted);
+    word-break: break-all;
+    font-size: 12px;
+}
+
+.gatt {
+    margin-top: 10px;
+}
+
+.detail dd ul,
+.detail .services {
+    margin: 0;
+}
+
+.detail .services li {
+    margin-bottom: 2px;
+}
+
+.detail {
+    width: 360px;
+}

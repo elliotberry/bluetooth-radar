@@ -1,4 +1,3 @@
-use btleplug::api::PeripheralProperties;
 use serde::{Deserialize, Serialize};
 
 use crate::ids;
@@ -6,114 +5,245 @@ use crate::ids;
 /// A device is "active" if it was seen within this window.
 pub const ACTIVE_WINDOW_MS: u64 = 10_000;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// One manufacturer-specific data entry from an advertisement.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Mfr {
+    pub company_id: u16,
+    pub data_hex: String,
+}
+
+/// One service-data entry from an advertisement (uuid is normalized).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SvcData {
+    pub uuid: String,
+    pub data_hex: String,
+}
+
+/// What an opt-in GATT query read from the device.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GattInfo {
+    pub queried_at: u64,
+    pub device_name: Option<String>,
+    pub manufacturer_name: Option<String>,
+    pub model_number: Option<String>,
+    pub hardware_revision: Option<String>,
+    pub firmware_revision: Option<String>,
+    pub software_revision: Option<String>,
+    pub battery_percent: Option<u8>,
+    pub appearance: Option<u16>,
+    pub appearance_label: Option<String>,
+}
+
+/// One received advertisement (or a refresh of what we know), independent of
+/// which backend produced it.
+#[derive(Clone, Debug, Default)]
+pub struct Sighting {
+    pub id: String,
+    pub local_name: Option<String>,
+    pub advertisement_name: Option<String>,
+    pub manufacturers: Vec<Mfr>,
+    pub service_data: Vec<SvcData>,
+    pub services: Vec<String>,
+    pub rssi: Option<i16>,
+    pub tx_power: Option<i16>,
+    pub appearance: Option<u16>,
+    pub address: Option<String>,
+    pub address_type: Option<String>,
+    pub connectable: Option<bool>,
+}
+
+/// The persisted record for a device.
+#[derive(Clone, Debug)]
 pub struct Device {
     pub id: String,
     pub word: String,
+    /// Display name: local name, else advertised name, else "Unknown".
     pub name: String,
-    pub company_id: Option<String>,
-    pub company_name: Option<String>,
-    pub manufacturer_data_hex: Option<String>,
+    pub local_name: Option<String>,
+    pub advertisement_name: Option<String>,
+    pub manufacturers: Vec<Mfr>,
+    pub service_data: Vec<SvcData>,
+    pub services: Vec<String>,
     pub rssi: Option<i16>,
     pub tx_power: Option<i16>,
+    pub appearance: Option<u16>,
     pub address: Option<String>,
-    pub services: Vec<String>,
+    pub address_type: Option<String>,
+    pub connectable: Option<bool>,
+    pub gatt: Option<GattInfo>,
     pub first_seen: u64,
     pub last_seen: u64,
-    /// Number of advertisements received from this device (persisted).
-    #[serde(default)]
     pub seen_count: u64,
-    #[serde(default)]
-    pub active: bool,
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub fn display_name(local: &Option<String>, advertised: &Option<String>) -> String {
+    local
+        .as_ref()
+        .or(advertised.as_ref())
+        .filter(|n| !n.is_empty())
+        .cloned()
+        .unwrap_or_else(|| "Unknown".to_string())
+}
+
+pub fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
+pub fn unhex(s: &str) -> Vec<u8> {
+    (0..s.len() / 2)
+        .filter_map(|i| u8::from_str_radix(&s[i * 2..i * 2 + 2], 16).ok())
+        .collect()
+}
+
+fn non_empty(s: Option<String>) -> Option<String> {
+    s.filter(|v| !v.is_empty())
+}
+
+impl Mfr {
+    pub fn bytes(&self) -> Vec<u8> {
+        unhex(&self.data_hex)
+    }
+}
+
+impl SvcData {
+    pub fn bytes(&self) -> Vec<u8> {
+        unhex(&self.data_hex)
+    }
+}
+
 impl Device {
-    /// Builds a device from a fresh advertisement (port of `formatDeviceInfo`).
-    /// `counted` says whether this sighting is one advertisement that should
-    /// add to `seen_count` (btleplug also emits extra events per advertisement).
-    pub fn from_properties(
-        id: &str,
-        props: &PeripheralProperties,
-        now: u64,
-        counted: bool,
-    ) -> Device {
-        let name = props
-            .local_name
-            .clone()
-            .or_else(|| props.advertisement_name.clone())
-            .filter(|n| !n.is_empty())
-            .unwrap_or_else(|| "Unknown".to_string());
-
-        // The CLI reads the company id from the first two bytes of the
-        // manufacturer data; btleplug already splits it out as the map key.
-        let manufacturer = props
-            .manufacturer_data
-            .iter()
-            .min_by_key(|(company, _)| **company);
-        let (company_id, company_name, manufacturer_data_hex) = match manufacturer {
-            Some((company, payload)) => (
-                Some(ids::company_id_hex(*company)),
-                Some(ids::company_name(*company)),
-                Some(hex(payload)),
-            ),
-            None => (None, None, None),
-        };
-
-        let address = props.address.to_string();
-        let address = if address == "00:00:00:00:00:00" {
-            None
-        } else {
-            Some(address)
-        };
-
+    /// Builds a new record from the first sighting.
+    pub fn from_sighting(s: Sighting, now: u64, counted: bool) -> Device {
+        let local_name = non_empty(s.local_name);
+        let advertisement_name = non_empty(s.advertisement_name);
+        let mut manufacturers = s.manufacturers;
+        manufacturers.sort_by_key(|m| m.company_id);
+        let mut service_data = s.service_data;
+        service_data.sort_by(|a, b| a.uuid.cmp(&b.uuid));
         Device {
-            id: id.to_string(),
-            word: ids::deterministic_word(id),
-            name,
-            company_id,
-            company_name,
-            manufacturer_data_hex,
-            rssi: props.rssi,
-            tx_power: props.tx_power_level,
-            address,
-            services: props.services.iter().map(|s| s.to_string()).collect(),
+            word: ids::deterministic_word(&s.id),
+            name: display_name(&local_name, &advertisement_name),
+            id: s.id,
+            local_name,
+            advertisement_name,
+            manufacturers,
+            service_data,
+            services: s.services,
+            rssi: s.rssi,
+            tx_power: s.tx_power,
+            appearance: s.appearance,
+            address: non_empty(s.address),
+            address_type: s.address_type,
+            connectable: s.connectable,
+            gatt: None,
             first_seen: now,
             last_seen: now,
             seen_count: counted as u64,
-            active: true,
         }
     }
 
-    /// Merges a newer sighting into this record, keeping known details that the
-    /// latest advertisement happened to omit.
-    pub fn merge(&mut self, newer: Device) {
-        if newer.name != "Unknown" {
-            self.name = newer.name;
+    /// Merges a newer sighting, keeping known details that the latest
+    /// advertisement happened to omit.
+    pub fn merge(&mut self, s: Sighting, now: u64, counted: bool) {
+        if let Some(name) = non_empty(s.local_name) {
+            self.local_name = Some(name);
         }
-        if newer.company_id.is_some() {
-            self.company_id = newer.company_id;
-            self.company_name = newer.company_name;
-            self.manufacturer_data_hex = newer.manufacturer_data_hex;
+        if let Some(name) = non_empty(s.advertisement_name) {
+            self.advertisement_name = Some(name);
         }
-        if newer.rssi.is_some() {
-            self.rssi = newer.rssi;
+        self.name = display_name(&self.local_name, &self.advertisement_name);
+
+        for m in s.manufacturers {
+            match self.manufacturers.iter_mut().find(|e| e.company_id == m.company_id) {
+                Some(existing) => *existing = m,
+                None => self.manufacturers.push(m),
+            }
         }
-        if newer.tx_power.is_some() {
-            self.tx_power = newer.tx_power;
+        self.manufacturers.sort_by_key(|m| m.company_id);
+
+        for d in s.service_data {
+            match self.service_data.iter_mut().find(|e| e.uuid == d.uuid) {
+                Some(existing) => *existing = d,
+                None => self.service_data.push(d),
+            }
         }
-        if newer.address.is_some() {
-            self.address = newer.address;
+        self.service_data.sort_by(|a, b| a.uuid.cmp(&b.uuid));
+
+        if !s.services.is_empty() {
+            self.services = s.services;
         }
-        if !newer.services.is_empty() {
-            self.services = newer.services;
+        if s.rssi.is_some() {
+            self.rssi = s.rssi;
         }
-        self.last_seen = newer.last_seen;
-        self.seen_count += newer.seen_count;
-        self.active = true;
+        if s.tx_power.is_some() {
+            self.tx_power = s.tx_power;
+        }
+        if s.appearance.is_some() {
+            self.appearance = s.appearance;
+        }
+        if let Some(address) = non_empty(s.address) {
+            self.address = Some(address);
+        }
+        if s.address_type.is_some() {
+            self.address_type = s.address_type;
+        }
+        if s.connectable.is_some() {
+            self.connectable = s.connectable;
+        }
+        self.last_seen = now;
+        self.seen_count += counted as u64;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sighting(id: &str) -> Sighting {
+        Sighting {
+            id: id.into(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn hex_round_trip() {
+        assert_eq!(hex(&[0x0c, 0xff, 0x01]), "0cff01");
+        assert_eq!(unhex("0cff01"), vec![0x0c, 0xff, 0x01]);
+    }
+
+    #[test]
+    fn merge_keeps_known_details() {
+        let mut first = sighting("a");
+        first.local_name = Some("Thing".into());
+        first.advertisement_name = Some("Cached".into());
+        first.manufacturers = vec![Mfr { company_id: 0x4c, data_hex: "10".into() }];
+        let mut d = Device::from_sighting(first, 100, true);
+        assert_eq!(d.name, "Thing");
+
+        // A later advertisement without a name or manufacturer data.
+        let mut second = sighting("a");
+        second.rssi = Some(-70);
+        second.manufacturers = vec![Mfr { company_id: 0x06, data_hex: "01".into() }];
+        d.merge(second, 200, true);
+
+        assert_eq!(d.name, "Thing");
+        assert_eq!(d.advertisement_name.as_deref(), Some("Cached"));
+        assert_eq!(d.manufacturers.len(), 2);
+        assert_eq!(d.manufacturers[0].company_id, 0x06);
+        assert_eq!(d.rssi, Some(-70));
+        assert_eq!(d.seen_count, 2);
+        assert_eq!((d.first_seen, d.last_seen), (100, 200));
+    }
+
+    #[test]
+    fn uncounted_sightings_do_not_add() {
+        let mut d = Device::from_sighting(sighting("a"), 1, true);
+        d.merge(sighting("a"), 2, false);
+        assert_eq!(d.seen_count, 1);
+        assert_eq!(d.name, "Unknown");
     }
 }

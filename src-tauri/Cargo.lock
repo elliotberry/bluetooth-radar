@@ -141,6 +141,9 @@ version = "0.1.0"
 dependencies = [
  "btleplug",
  "futures",
+ "objc2",
+ "objc2-core-bluetooth",
+ "objc2-foundation",
  "rusqlite",
  "serde",
  "serde_json",

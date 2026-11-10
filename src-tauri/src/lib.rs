@@ -1,18 +1,26 @@
+mod decode;
 mod device;
 mod ids;
+mod query;
 mod scanner;
+mod scan_btleplug;
+#[cfg(target_os = "macos")]
+mod scan_native;
 mod store;
+mod view;
 
 use std::sync::{Arc, Mutex};
 
+use serde::Serialize;
 use tauri::{Emitter, Manager, State};
 
-use device::Device;
+use device::GattInfo;
 use scanner::{ScanStatus, SharedStatus, SharedStore};
 use store::Store;
+use view::DeviceView;
 
 #[tauri::command]
-fn get_devices(store: State<'_, SharedStore>) -> Vec<Device> {
+fn get_devices(store: State<'_, SharedStore>) -> Vec<DeviceView> {
     store.lock().unwrap().snapshot()
 }
 
@@ -31,6 +39,40 @@ fn clear_devices(app: tauri::AppHandle, store: State<'_, SharedStore>) {
     let _ = app.emit(scanner::EVENT_DEVICES, snapshot);
 }
 
+#[derive(Serialize)]
+struct AppInfo {
+    /// "macos", "windows" or "linux"
+    platform: &'static str,
+}
+
+#[tauri::command]
+fn get_app_info() -> AppInfo {
+    AppInfo {
+        platform: std::env::consts::OS,
+    }
+}
+
+/// Connects to a device, reads its standard info characteristics and stores
+/// them. Only runs when the user asks for it.
+#[tauri::command]
+async fn query_device(
+    app: tauri::AppHandle,
+    store: State<'_, SharedStore>,
+    id: String,
+) -> Result<GattInfo, String> {
+    let info = query::query_device(&id).await?;
+    let snapshot = {
+        let mut store = store.lock().unwrap();
+        if !store.set_gatt(&id, info.clone()) {
+            return Err("That device is no longer in the list".to_string());
+        }
+        store.flush();
+        store.snapshot()
+    };
+    let _ = app.emit(scanner::EVENT_DEVICES, snapshot);
+    Ok(info)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let app = tauri::Builder::default()
@@ -38,7 +80,7 @@ pub fn run() {
             // The database lives in the user's data directory under a fixed
             // name, so it survives reinstalling the app.
             let db_dir = store::data_dir(&app.path().data_dir()?);
-            // Earlier versions kept a JSON file under the app's identifier;
+            // The first version kept a JSON file under the app's identifier;
             // it is imported once if the database is still empty.
             let legacy_json = app.path().app_data_dir()?.join("devices.json");
             let store: SharedStore = Arc::new(Mutex::new(Store::open(
@@ -56,7 +98,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_devices,
             get_scan_status,
-            clear_devices
+            get_app_info,
+            clear_devices,
+            query_device
         ])
         .build(tauri::generate_context!())
         .expect("error while building BLE Radar");
