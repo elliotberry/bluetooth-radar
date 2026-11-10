@@ -1,0 +1,47 @@
+{
+    "name": "ble-radar",
+    "description": "",
+    "main": "index.js",
+    "author": "dad",
+    "license": "The Unlicense",
+    "bin": "./index.js",
+    "type": "module",
+    "dependencies": {
+        "@farjs/blessed": "^0.4.0",
+        "blessed": "^0.1.81",
+        "blessed-contrib": "^4.11.0",
+        "noble": "elliotberry/noble-mac",
+        "yaml": "^2.9.1"
+    },
+    "devDependencies": {
+        "eslint": "^10.14.0",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.9.10"
+    },
+    "prettier": {
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "semi": false,
+        "singleQuote": true
+    },
+    "eslintConfig": {
+        "root": true,
+        "parserOptions": {
+            "ecmaVersion": 12,
+            "sourceType": "module"
+        },
+        "extends": [
+            "eslint:recommended",
+            "prettier"
+        ],
+        "env": {
+            "es2021": true,
+            "node": true,
+            "es6": true
+        },
+        "rules": {
+            "no-unused-vars": "warn",
+            "no-console": "off"
+        }
+    }
+}

@@ -1,0 +1,21 @@
+[package]
+name = "ble-radar-desktop"
+version = "0.1.0"
+description = "BLE radar desktop app"
+edition = "2021"
+
+[lib]
+name = "ble_radar_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+btleplug = "0.13"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+futures = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.41", features = ["bundled"] }

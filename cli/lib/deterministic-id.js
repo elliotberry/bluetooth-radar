@@ -692,4 +692,5 @@ function deterministicID(hexId) {
   
   return array[index];
 }
+export { array as words };
 export default deterministicID;
