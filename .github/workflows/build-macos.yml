@@ -5,6 +5,8 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions:
+  contents: write # needed to upload release assets
 
 concurrency:
   group: build-macos-${{ github.ref }}
@@ -51,3 +53,12 @@ jobs:
         name: ble-radar-macos-${{ matrix.arch }}
         path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
         if-no-files-found: error
+
+    - name: Attach DMG to release
+      if: github.event_name == 'release'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release upload "${{ github.event.release.tag_name }}" \
+          src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg \
+          --clobber
