@@ -2,7 +2,7 @@
 #wrangler (cf workers)
 .wrangler
 data.json
-
+./dist
 # Tauri / Vite app
 node_modules
 dist
